@@ -1,13 +1,45 @@
-# Sample Hardhat Project
+# DUSK Migration Contract
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+This project contains the smart contract and related scripts for migrating DUSK tokens from ERC20/BEP20 to native DUSK. The project is built using Hardhat.
 
-Try running some of the following tasks:
+## Overview
+
+The DUSK migration contract is designed to lock DUSK into the contract, and provide a receiving address on the DUSK side. It includes:
+- **Smart Contracts**: A Solidity migration contract and an ERC20 mock based on ERC20 DUSK.
+- **Scripts**: Scripts for compiling contracts, extracting the ABI and listening to the migrate event.
+- **Tests**: Integration tests that test how the migrate function behaves.
+
+## Install
+
+Install the dependencies:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
+npm install
+```
+
+## Usage
+
+### Compile Contracts
+
+To compile the smart contracts, run:
+```shell
+npm run compile
+```
+
+The contracts and their artifacts can be found in the `artifacts/` directory.
+
+### Extract ABI
+
+To extract the contract ABI from the compiled `DUSKMigration` contract, use:
+```shell
+npm run abi
+```
+
+This will dump an `.abi.json` file in the `contract` folder.
+
+### Run Tests
+
+To run the tests:
+```shell
+npm test
 ```
