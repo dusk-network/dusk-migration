@@ -4,7 +4,10 @@
   "description": "The DUSK migration contract from ERC20/BEP20 to native DUSK",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "npex hardhat compile",
+    "test": "npx hardhat test",
+    "test:gas": "UPDATE_SNAPSHOT=1 yarn test --grep gas",
+    "clean": "rm -rf ./artifacts ./cache ./typechain"
   },
   "author": "",
   "license": "ISC",
