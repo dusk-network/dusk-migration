@@ -80,5 +80,90 @@ describe("Migration", function () {
       await expect(duskMigration.connect(addr1).migrate(amountToMigrate, phoenixAddress))
         .to.be.reverted;
     });
+
+    it("Should allow a user to migrate exactly 1 LUX", async function () {
+      const { duskToken, duskMigration, addr1 } = await loadFixture(
+        deployMigrationFixture
+      );
+
+      const amountToMigrate = ethers.parseUnits("1000000000", 0); // 1 LUX, smallest unit
+      const luxToSend = ethers.parseUnits("1", 0); // Exactly 1 LUX in native DUSK
+      const phoenixAddress = "4ZH3oyfTuMHyWD1Rp4e7QKp5yK6wLrWvxHneufAiYBAjvereFvfjtDvTbBcZN5ZCsaoMo49s1LKPTwGpowik6QJG";
+
+      // addr1 approves the migration contract
+      await duskToken.connect(addr1).approve(duskMigration.target, amountToMigrate);
+
+      // Perform migration and check event emission
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrate, phoenixAddress))
+        .to.emit(duskMigration, "Migration")
+        .withArgs(addr1.address, luxToSend, phoenixAddress); // Emit exactly 1 LUX
+
+      // Check if the contract balance increased by exactly 1 LUX
+      expect(await duskToken.balanceOf(duskMigration.target)).to.equal(amountToMigrate);
+    });
+
+    it("Should allow a user to migrate slightly above 1 LUX and round down to 1 LUX", async function () {
+      const { duskToken, duskMigration, addr1 } = await loadFixture(deployMigrationFixture);
+
+      const amountToMigrate = ethers.parseUnits("1000000001", 0); // 1 LUX + 1 wei 
+      const amountMigrated = ethers.parseUnits("1000000000", 0); // Expected migration amount: 1 LUX
+      const luxToSend = ethers.parseUnits("1", 0); // Expected event emission: 1 LUX
+      const phoenixAddress = "4ZH3oyfTuMHyWD1Rp4e7QKp5yK6wLrWvxHneufAiYBAjvereFvfjtDvTbBcZN5ZCsaoMo49s1LKPTwGpowik6QJG";
+
+      // addr1 approves the migration contract
+      await duskToken.connect(addr1).approve(duskMigration.target, amountToMigrate);
+
+      // Perform migration and expect rounding down
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrate, phoenixAddress))
+        .to.emit(duskMigration, "Migration")
+        .withArgs(addr1.address, luxToSend, phoenixAddress); // Emit exactly 1 LUX
+
+      // Check if the contract balance increased by 1 LUX
+      expect(await duskToken.balanceOf(duskMigration.target)).to.equal(amountMigrated);
+    });
+
+    it("Should not allow a user to migrate slightly below 1 LUX and round down to 0 LUX", async function () {
+      const { duskToken, duskMigration, addr1 } = await loadFixture(deployMigrationFixture);
+
+      const amountToMigrate = ethers.parseUnits("99999999", 0); // 1 LUX - 1 wei 
+      const phoenixAddress = "4ZH3oyfTuMHyWD1Rp4e7QKp5yK6wLrWvxHneufAiYBAjvereFvfjtDvTbBcZN5ZCsaoMo49s1LKPTwGpowik6QJG";
+
+      // addr1 approves the migration contract
+      await duskToken.connect(addr1).approve(duskMigration.target, amountToMigrate);
+
+      // Perform migration and expect rounding down
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrate, phoenixAddress));
+
+      // Attempt to migrate less than 1 LUX, expect a revert
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrate, phoenixAddress))
+        .to.be.revertedWith("Amount must be at least 1 LUX");
+    });
+
+    it("Should allow a user to perform multiple migrations", async function () {
+      const { duskToken, duskMigration, addr1 } = await loadFixture(deployMigrationFixture);
+
+      const amountToMigrateFirst = ethers.parseUnits("1000000000", 0); // 1 LUX
+      const amountToMigrateSecond = ethers.parseUnits("2000000000", 0); // 2 LUX
+      const totalMigrated = ethers.parseUnits("3000000000", 0); // 3 LUX in total after both migrations
+      const luxToSendFirst = ethers.parseUnits("1", 0); // First migration sends 1 LUX
+      const luxToSendSecond = ethers.parseUnits("2", 0); // Second migration sends 2 LUX
+      const phoenixAddress = "4ZH3oyfTuMHyWD1Rp4e7QKp5yK6wLrWvxHneufAiYBAjvereFvfjtDvTbBcZN5ZCsaoMo49s1LKPTwGpowik6QJG";
+
+      // addr1 approves the migration contract
+      await duskToken.connect(addr1).approve(duskMigration.target, ethers.parseUnits("3000000000", 0));
+
+      // Perform first migration
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrateFirst, phoenixAddress))
+        .to.emit(duskMigration, "Migration")
+        .withArgs(addr1.address, luxToSendFirst, phoenixAddress); // Emit 1 LUX for the first migration
+
+      // Perform second migration
+      await expect(duskMigration.connect(addr1).migrate(amountToMigrateSecond, phoenixAddress))
+        .to.emit(duskMigration, "Migration")
+        .withArgs(addr1.address, luxToSendSecond, phoenixAddress); // Emit 2 LUX for the second migration
+
+      // Check if the contract balance equals the total of both migrations
+      expect(await duskToken.balanceOf(duskMigration.target)).to.equal(totalMigrated);
+    });
   });
 });
