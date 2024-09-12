@@ -22,6 +22,18 @@ contract DUSKMigration {
         duskToken = IERC20(_duskTokenAddress);
     }
 
+    /**
+     * @notice Migrates ERC20 DUSK tokens to native DUSK by transferring the tokens to this contract and locking them.
+     *         The function rounds the amount down to the nearest 1 LUX (10^9 DUSK wei).
+     * 
+     * @dev This function uses the check-effects-interactions pattern to prevent reentrancy risks. Specifically:
+     *      1. Check: Check if the `amount` is greater than or equal to 1 LUX.
+     *      2. Effect: Transfers the specified amount of DUSK tokens from the sender to the contract.
+     *      3. Interaction: Emits a `Migration` event, which is being relied upon for issuing native DUSK.
+     * 
+     * @param amount The amount of ERC20 DUSK tokens to migrate in DUSK wei. Must be at least 1 LUX (10^9 wei).
+     * @param targetAddress The native DUSK mainnet Moonlight key where the equivalent native DUSK should be reissued.
+     */
     function migrate(uint256 amount, string memory targetAddress) external {
         require(amount >= MINIMUM_MIGRATION_AMOUNT, "Amount must be at least 1 LUX");
 
