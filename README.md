@@ -41,6 +41,20 @@ To extract the contract ABI from the compiled `DUSKMigration` contract, use:
 npm run abi
 ```
 
+### Listen to migration events
+
+To listen to migration events, set up a `.env` file based on the `example.env` file and run:
+```shell
+npm run events:listen
+```
+
+### Get past migration events
+
+To get past migration events, set up a `.env` file based on the `example.env` file and run:
+```shell
+npm run events:past
+```
+
 This will dump an `.abi.json` file in the `contract` folder.
 
 ### Run Tests

@@ -8,12 +8,17 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
     "test:gas": "UPDATE_SNAPSHOT=1 yarn test --grep gas",
-    "clean": "rm -rf ./artifacts ./cache ./typechain"
+    "clean": "rm -rf ./artifacts ./cache ./typechain",
+    "events:listen": "node ./scripts/listenEvents.js",
+    "events:past": "node ./scripts/pastEvents.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.22.8"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.14.0"
   }
 }
