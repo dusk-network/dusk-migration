@@ -22,14 +22,14 @@ const contractAbi = [
     "event Migration(address indexed from, uint256 amount, string targetAddress)"
 ];
 
+const MIGRATION_EVENT_SIGNATURE_HASH = "0x9fe606c14926b70a5edcf4f53cf9cc99c3deba52132688c67a0c9dde0a7ab5bb";
+
 // Create a contract instance
 const duskMigrationContract = new ethers.Contract(contractAddress, contractAbi, provider);
 
 const filter = {
     address: contractAddress,
-    topics: [
-        "0x9fe606c14926b70a5edcf4f53cf9cc99c3deba52132688c67a0c9dde0a7ab5bb"  // The event signature hash
-    ],
+    topics: [MIGRATION_EVENT_SIGNATURE_HASH],
     fromBlock: 0,
     toBlock: "latest"
 };
