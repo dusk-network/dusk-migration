@@ -43,7 +43,7 @@ async function getPastEvents() {
 
         console.log(`Past Migration event detected:
             From: ${parsedLog.args.from}
-            Amount: ${parsedLog.args.amount}
+            Amount: ${ethers.formatUnits(parsedLog.args.amount, 9)} DUSK
             Target Address: ${parsedLog.args.targetAddress}
             Transaction Hash: ${log.transactionHash}
         `);
