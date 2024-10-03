@@ -2,6 +2,11 @@
 
 This project contains the smart contract and related scripts for migrating DUSK tokens from ERC20/BEP20 to native DUSK. The project is built using Hardhat.
 
+**Migration Flow**:
+1. User invokes `migrate()` with ERC20/BEP20 DUSK tokens and their Dusk mainnet Moonlight key.
+2. The contract locks the ERC20/BEP20 tokens and emits a `Migration` event.
+3. An external service listens to the event and reissues native DUSK on the Dusk network.
+
 ## Overview
 
 The DUSK migration contract is designed to lock DUSK into the contract, and provide a receiving address on the DUSK side. It includes:
