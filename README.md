@@ -5,8 +5,8 @@ This project contains the smart contract and related scripts for migrating DUSK 
 ## Overview
 
 The DUSK migration contract is designed to lock DUSK into the contract, and provide a receiving address on the DUSK side. It includes:
-- **Smart Contracts**: A Solidity migration contract and an ERC20 mock based on ERC20 DUSK.
-- **Scripts**: Scripts for compiling contracts, extracting the ABI and listening to the migrate event.
+- **Smart Contracts**: A [Solidity migration contract](./contracts/DUSKMigration.sol) and an [ERC20 mock based on ERC20 DUSK](./contracts/ERC20Mock.sol) for testing.
+- **Scripts**: Scripts for compiling contracts, extracting the ABI, listening to the migrate events and collecting past events.
 - **Tests**: Integration tests that test how the migrate function behaves.
 
 ## Clone repo
