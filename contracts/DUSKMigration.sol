@@ -10,6 +10,9 @@ interface IERC20 {
     ) external returns (bool);
 }
 
+/// @title The ERC20/BEP20 DUSK migration contract
+/// @author Hein Dauven
+/// @notice It is assumed that another service or protocol catches the migration events and processes them accordingly
 contract DUSKMigration {
     IERC20 public immutable duskToken;
     // Conversion factor between ERC20 DUSK (18 decimals) and native DUSK (9 decimals), where 10^9 DUSK wei is equivalent to 1 LUX
@@ -18,15 +21,18 @@ contract DUSKMigration {
     // Event to log the migration for reissuing on Dusk mainnet. The amount being in LUX
     event Migration(address indexed from, uint256 amount, string targetAddress);
 
+    /**
+     * @param _duskTokenAddress The address of the ERC20/BEP20 DUSK token contract.
+     */
     constructor(address _duskTokenAddress) {
         duskToken = IERC20(_duskTokenAddress);
     }
 
     /**
-     * @notice Migrates ERC20 DUSK tokens to native DUSK by transferring the tokens to this contract and locking them.
+     * @notice Migrates ERC20 DUSK tokens to native DUSK by transferring the tokens from the sender to this contract for locking.
      *         The function rounds the amount down to the nearest 1 LUX (10^9 DUSK wei).
      * 
-     * @dev This function uses the check-effects-interactions pattern to prevent reentrancy risks. Specifically:
+     * @dev This function uses the check-effects-interactions pattern to mitigate reentrancy risks. External calls are only made after internal state changes. Specifically:
      *      1. Check: Check if the `amount` is greater than or equal to 1 LUX.
      *      2. Effect: Transfers the specified amount of DUSK tokens from the sender to the contract.
      *      3. Interaction: Emits a `Migration` event, which is being relied upon for issuing native DUSK.
