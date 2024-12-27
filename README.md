@@ -1,6 +1,6 @@
 # DUSK Migration Contract
 
-This project contains the smart contract and related scripts for migrating DUSK tokens from ERC20/BEP20 to native DUSK. The project is built using Hardhat.
+This project contains the smart contract and related scripts for migrating DUSK tokens from ERC20/BEP20 to native DUSK. It also contains the Dusk Mainnet Onramp contract. The project is built using Hardhat.
 
 **Migration Flow**:
 1. User invokes `migrate()` with ERC20/BEP20 DUSK tokens and their Dusk mainnet Moonlight key.
@@ -10,8 +10,8 @@ This project contains the smart contract and related scripts for migrating DUSK 
 ## Overview
 
 The DUSK migration contract is designed to lock DUSK into the contract, and provide a receiving address on the DUSK side. It includes:
-- **Smart Contracts**: A [Solidity migration contract](./contracts/DUSKMigration.sol) and an [ERC20 mock based on ERC20 DUSK](./contracts/ERC20Mock.sol) for testing.
-- **Scripts**: Scripts for compiling contracts, extracting the ABI, listening to the migrate events and collecting past events.
+- **Smart Contracts**: A [Solidity migration contract](./contracts/DUSKMigration.sol), an [ERC20 mock based on ERC20 DUSK](./contracts/ERC20Mock.sol) for testing and the [Dusk Mainnet Onramp contract](./contracts/DuskMainnetOnramp.sol).
+- **Scripts**: Scripts for compiling contracts, extracting the ABI, listening to the migrate events, collecting past events and gathering genesis deposit/stake events.
 - **Tests**: Integration tests that test how the migrate function behaves.
 
 ## Clone repo
@@ -61,6 +61,15 @@ npm run events:past
 ```
 
 This will dump an `.abi.json` file in the `contract` folder.
+
+### Get Genesis Onramp events
+
+To get genesis deposit and stake events, and convert it to a `genesis.toml`, set up a `.env` file based on the `example.env` file and run:
+```shell
+npm run events:genesis
+```
+
+This will create a `genesis.toml` file in the root folder.
 
 ### Run Tests
 
