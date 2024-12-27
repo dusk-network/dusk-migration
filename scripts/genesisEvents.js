@@ -25,6 +25,28 @@ const contractABI = [
     "event GenesisStake(address indexed from, uint256 amount, string targetAddress)"
 ];
 
+// Function to merge entries based on events.
+// For example, to prevent two stake entries for the same key
+function mergeEntries(entries, valueKey) {
+    const merged = {};
+
+    entries.forEach(({ address, [valueKey]: value }) => {
+        const numericValue = BigInt(value.replace(/_/g, ""));
+        if (!merged[address]) {
+            merged[address] = numericValue;
+        } else {
+            merged[address] += numericValue;
+        }
+    });
+
+    // Convert back to the required format
+    return Object.entries(merged).map(([address, value]) => ({
+        address,
+        [valueKey]: value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "_"),
+    }));
+}
+
+// Function to fetch events for a given chain configuration of the Onramp contract
 async function fetchEvents(chain) {
     const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
     const contract = new ethers.Contract(chain.contractAddress, contractABI, provider);
@@ -64,7 +86,11 @@ async function fetchEvents(chain) {
         console.error(`Error fetching events on ${chain.name}:`, error);
     }
 
-    return { stakeEntries, moonlightEntries };
+    // Merge duplicate entries on a per event basis
+    const mergedStakeEntries = mergeEntries(stakeEntries, 'amount');
+    const mergedMoonlightEntries = mergeEntries(moonlightEntries, 'balance');
+
+    return { stakeEntries: mergedStakeEntries, moonlightEntries: mergedMoonlightEntries };
 }
 
 async function main() {
@@ -78,6 +104,10 @@ async function main() {
         allStakeEntries = allStakeEntries.concat(stakeEntries);
         allMoonlightEntries = allMoonlightEntries.concat(moonlightEntries);
     }
+
+    // Combine entries across chains to handle duplicate event entries globally
+    allStakeEntries = mergeEntries(allStakeEntries, 'amount');
+    allMoonlightEntries = mergeEntries(allMoonlightEntries, 'balance');
 
     // Create genesis data structure
     const genesisData = {
