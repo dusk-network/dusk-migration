@@ -1,6 +1,5 @@
 require('@dotenvx/dotenvx').config();
 const { ethers } = require("ethers");
-const toml = require("smol-toml");
 const fs = require("fs");
 
 // Chain metadata to combine both calls to Ethereum and BSC
@@ -93,6 +92,29 @@ async function fetchEvents(chain) {
     return { stakeEntries: mergedStakeEntries, moonlightEntries: mergedMoonlightEntries };
 }
 
+// Custom TOML writer to handle our number formatting
+function writeTOML(data) {
+    let tomlContent = "";
+
+    if (data.stake) {
+        data.stake.forEach((entry, index) => {
+            tomlContent += "[[stake]]\n";
+            tomlContent += `address = '${entry.address}'\n`;
+            tomlContent += `amount = ${entry.amount}\n\n`;
+        });
+    }
+
+    if (data.moonlight_account) {
+        data.moonlight_account.forEach((entry) => {
+            tomlContent += "[[moonlight_account]]\n";
+            tomlContent += `address = '${entry.address}'\n`;
+            tomlContent += `balance = ${entry.balance}\n\n`;
+        });
+    }
+
+    return tomlContent.trim();
+}
+
 async function main() {
     let allStakeEntries = [];
     let allMoonlightEntries = [];
@@ -115,11 +137,11 @@ async function main() {
         moonlight_account: allMoonlightEntries,
     };
 
-    // Convert to TOML format
-    const genesisToml = toml.stringify(genesisData);
+    // Generate TOML content
+    const tomlContent = writeTOML(genesisData);
 
-    // Write events to genesis.toml
-    fs.writeFileSync("genesis.toml", genesisToml);
+    // Write TOML content to a file
+    fs.writeFileSync("genesis.toml", tomlContent);
     console.log("Generated genesis.toml file.");
 }
 
