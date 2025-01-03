@@ -45,25 +45,56 @@ function mergeEntries(entries, valueKey) {
     }));
 }
 
+// Function to calculate the total amount for a given value key
+function calculateTotal(entries, valueKey) {
+    return entries.reduce((total, entry) => {
+        const numericValue = BigInt(entry[valueKey].replace(/_/g, "")); // Convert to BigInt for precision
+        return total + numericValue;
+    }, BigInt(0));
+}
+
+// Function to fetch events in batches
+async function fetchEventsInBatches(contract, filter, fromBlock, toBlock, batchSize) {
+    let events = [];
+    let start = fromBlock;
+
+    while (start <= toBlock) {
+        const end = Math.min(start + batchSize - 1, toBlock);
+
+        try {
+            console.log(`Fetching events from block ${start} to block ${end}...`);
+            const batchEvents = await contract.queryFilter(filter, start, end);
+            events = events.concat(batchEvents);
+        } catch (error) {
+            console.error(`Error fetching events for block range ${start}-${end}:`, error);
+        }
+
+        start = end + 1;
+    }
+
+    return events;
+}
+
 // Function to fetch events for a given chain configuration of the Onramp contract
 async function fetchEvents(chain) {
     const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
     const contract = new ethers.Contract(chain.contractAddress, contractABI, provider);
 
-    const fromBlock = chain.startBlock;
-    const toBlock = "latest";
+    const fromBlock = Number(chain.startBlock);
+    const toBlock = await provider.getBlockNumber();
+    const batchSize = 2000;
 
     let stakeEntries = [];
     let moonlightEntries = [];
 
     try {
-        // Fetch GenesisDeposit events
+        // Fetch GenesisDeposit events in batches
         const depositFilter = contract.filters.GenesisDeposit();
-        const depositEvents = await contract.queryFilter(depositFilter, BigInt(fromBlock), toBlock);
+        const depositEvents = await fetchEventsInBatches(contract, depositFilter, fromBlock, toBlock, batchSize);
 
-        // Fetch GenesisStake events
+        // Fetch GenesisStake events in batches
         const stakeFilter = contract.filters.GenesisStake();
-        const stakeEvents = await contract.queryFilter(stakeFilter, BigInt(fromBlock), toBlock);
+        const stakeEvents = await fetchEventsInBatches(contract, stakeFilter, fromBlock, toBlock, batchSize);
 
         // Process GenesisDeposit events
         depositEvents.forEach((event) => {
@@ -130,6 +161,13 @@ async function main() {
     // Combine entries across chains to handle duplicate event entries globally
     allStakeEntries = mergeEntries(allStakeEntries, 'amount');
     allMoonlightEntries = mergeEntries(allMoonlightEntries, 'balance');
+
+    // Calculate totals
+    const totalStaked = calculateTotal(allStakeEntries, 'amount');
+    const totalDeposited = calculateTotal(allMoonlightEntries, 'balance');
+
+    console.log(`Total amount staked: ${totalStaked.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "_")}`);
+    console.log(`Total amount deposited: ${totalDeposited.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "_")}`);
 
     // Create genesis data structure
     const genesisData = {
